@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Books Borrowed</h5>
+                <p class="card-text display-6">{{ borrowed_books|length }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Books Overdue</h5>
+                <p class="card-text display-6">{{ overdue_books|length }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Read</h5>
+                <p class="card-text display-6">{{ recent_transactions|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Currently Borrowed</h5>
+            </div>
+            <div class="card-body">
+                {% if borrowed_books %}
+                <div class="list-group">
+                    {% for t in borrowed_books %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ t.book.title }}</h6>
+                            <small class="text-{% if t.due_date < datetime.utcnow() %}danger{% else %}primary{% endif %}">
+                                Due {{ t.due_date.strftime('%b %d') }}
+                            </small>
+                        </div>
+                        <small class="text-muted">By {{ t.book.author }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No books currently borrowed</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_transactions %}
+                <div class="list-group">
+                    {% for t in recent_transactions %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ t.book.title }}</h6>
+                            <small class="text-{% if t.status == 'borrowed' %}primary{% else %}success{% endif %}">
+                                {{ t.status|capitalize }}
+                            </small>
+                        </div>
+                        <small class="text-muted">
+                            {{ t.issue_date.strftime('%b %d, %Y') }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No recent activity</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

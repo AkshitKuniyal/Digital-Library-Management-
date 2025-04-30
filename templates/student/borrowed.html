@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}My Borrowed Books{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">My Borrowed Books</h1>
+</div>
+
+{% if transactions %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Author</th>
+                <th>Borrowed Date</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Fine</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in transactions %}
+            <tr>
+                <td>{{ t.book.title }}</td>
+                <td>{{ t.book.author }}</td>
+                <td>{{ t.issue_date.strftime('%b %d, %Y') }}</td>
+                <td class="{% if t.due_date < datetime.utcnow() and t.status == 'borrowed' %}text-danger{% endif %}">
+                    {{ t.due_date.strftime('%b %d, %Y') }}
+                </td>
+                <td>
+                    <span class="badge bg-{% if t.status == 'borrowed' %}primary{% elif t.status == 'returned' %}success{% else %}danger{% endif %}">
+                        {{ t.status|capitalize }}
+                    </span>
+                </td>
+                <td>
+                    {% if t.fine_amount > 0 %}
+                        ${{ "%.2f"|format(t.fine_amount) }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    You haven't borrowed any books yet.
+</div>
+{% endif %}
+{% endblock %}
