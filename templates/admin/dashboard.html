@@ -3,108 +3,116 @@
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block extra_css %}
-<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/dashboard.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Dashboard</h1>
-</div>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Dashboard</h1>
+        <form method="POST" action="{{ url_for('update_transactions') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+        </form>
+    </div>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-primary mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Total Books</h5>
-                <p class="card-text display-6">{{ total_books }}</p>
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Books</h5>
+                    <p class="card-text display-6">{{ total_books }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Students</h5>
+                    <p class="card-text display-6">{{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Borrowed Books</h5>
+                    <p class="card-text display-6">{{ total_borrowed }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Overdue Books</h5>
+                    <p class="card-text display-6">{{ overdue_books }}</p>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Total Students</h5>
-                <p class="card-text display-6">{{ total_users }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-warning mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Borrowed Books</h5>
-                <p class="card-text display-6">{{ total_borrowed }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-danger mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Overdue Books</h5>
-                <p class="card-text display-6">{{ overdue_books }}</p>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Transactions (Last 30 Days)</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="transactionChart" height="300"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Recent Transactions</h5>
-            </div>
-            <div class="card-body">
-                <div class="list-group">
-                    {% for t in recent_transactions %}
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ t.book.title }}</h6>
-                            <small class="text-{% if t.status == 'borrowed' %}primary{% else %}success{% endif %}">
-                                {{ t.status|capitalize }}
+    <!-- Recent Transactions -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Recent Transactions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for t in recent_transactions %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ t.book.title }}</h6>
+                                <small class="text-{% if t.status == 'borrowed' %}primary{% else %}success{% endif %}">
+                                    {{ t.status|capitalize }}
+                                </small>
+                            </div>
+                            <small class="text-muted">
+                                {{ t.user.full_name }} - {{ t.issue_date.strftime('%b %d, %Y') }}
                             </small>
                         </div>
-                        <small class="text-muted">
-                            {{ t.user.full_name }} - {{ t.issue_date.strftime('%b %d, %Y') }}
-                        </small>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    fetch("{{ url_for('transaction_stats') }}")
-        .then(response => response.json())
-        .then(data => {
-            const ctx = document.getElementById('transactionChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: data,
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+    // Add CSRF token to fetch headers
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    
+    fetch("{{ url_for('transaction_stats') }}", {
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const ctx = document.getElementById('transactionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
                     }
                 }
-            });
+            }
         });
+    })
+    .catch(error => console.error('Error:', error));
 });
 </script>
 {% endblock %}

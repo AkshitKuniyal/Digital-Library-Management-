@@ -1,0 +1,131 @@
+/* === Modern Library Theme === */
+:root {
+    --ivory: #f8f5f2;
+    --paper: #f0ebe5;
+    --slate: #3a4a58;
+    --sage: #8a9b8f;
+    --clay: #c4a78a;
+    --shadow-sm: 0 2px 12px rgba(58, 74, 88, 0.08);
+    --shadow-md: 0 4px 24px rgba(58, 74, 88, 0.12);
+    --radius: 8px;
+    --transition: all 0.3s ease;
+  }
+  
+  /* Base Styles */
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--ivory);
+    color: var(--slate);
+    line-height: 1.6;
+  }
+  
+  /* Navigation */
+  .navbar {
+    background-color: var(--slate) !important;
+    box-shadow: var(--shadow-sm);
+    padding: 1rem 0;
+  }
+  
+  .navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  
+  .navbar-brand i {
+    color: var(--clay);
+  }
+  
+  .nav-link {
+    font-weight: 450;
+    position: relative;
+  }
+  
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--clay);
+    transition: var(--transition);
+  }
+  
+  .nav-link:hover::after {
+    width: 100%;
+  }
+  
+  /* Hero Section */
+  .hero-section {
+    background: linear-gradient(rgba(58, 74, 88, 0.9), rgba(58, 74, 88, 0.95)),
+                url('/static/images/library-hero.jpg') center/cover;
+    color: white;
+    padding: 6rem 0;
+  }
+  
+  /* Cards */
+  .card {
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  /* Buttons */
+  .btn {
+    border-radius: var(--radius);
+    padding: 0.6rem 1.4rem;
+    font-weight: 500;
+    transition: var(--transition);
+  }
+  
+  .login-btn {
+    background-color: var(--clay);
+    border-color: var(--clay);
+  }
+  
+  .login-btn:hover {
+    background-color: #b89679;
+    transform: translateY(-2px);
+  }
+  
+  /* Tables */
+  .table {
+    background-color: white;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  
+  .table th {
+    background-color: var(--paper);
+    font-weight: 600;
+  }
+  
+  /* Utility Classes */
+  .bg-light {
+    background-color: var(--paper) !important;
+  }
+  
+  .text-primary {
+    color: var(--sage) !important;
+  }
+  
+  .text-danger {
+    color: #dc3545 !important;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .hero-section {
+      padding: 4rem 0;
+    }
+    
+    .display-4 {
+      font-size: 2.5rem;
+    }
+  }

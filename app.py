@@ -1,19 +1,29 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
+from flask import current_app
 import random
+from flask_wtf import CSRFProtect
+from sqlalchemy import or_
+from flask_wtf.csrf import CSRFProtect
+
+
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
-
 # Database configuration
+app.config['WTF_CSRF_ENABLED'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///library.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'fallback-key-for-development-only'
+csrf = CSRFProtect(app)
 db = SQLAlchemy(app)
+
 
 # Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -55,7 +65,7 @@ class Transaction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     issue_date = db.Column(db.DateTime, default=datetime.utcnow)
     return_date = db.Column(db.DateTime)
-    due_date = db.Column(db.DateTime, default=datetime.utcnow() + timedelta(days=14))
+    due_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc) + timedelta(days=14))
     status = db.Column(db.String(20), default='borrowed')  # 'borrowed', 'returned', 'overdue'
     fine_amount = db.Column(db.Float, default=0.0)
     
@@ -66,8 +76,10 @@ class Transaction(db.Model):
         return f'<Transaction {self.id}>'
 
 # Create tables
+# Create default admin if doesn't exist
 with app.app_context():
     db.create_all()
+    
 
 # Helper functions
 def allowed_file(filename):
@@ -80,46 +92,134 @@ def calculate_fine(due_date):
     return 0.0
 
 # Middleware to check login status
-@app.before_request
-def before_request():
-    allowed_routes = ['login', 'static']
-    if request.endpoint not in allowed_routes and 'user_id' not in session:
-        return redirect(url_for('login'))
 
 # Routes
+
+# Exempt endpoints from authentication
+LOGIN_EXEMPT_ENDPOINTS = ['login', 'register', 'static', 'home']
+
+@app.before_request
+def require_login():
+    """Redirect to login page if not authenticated"""
+    if request.endpoint not in LOGIN_EXEMPT_ENDPOINTS and 'user_id' not in session:
+        return redirect(url_for('login'))
+
 @app.route('/')
+def home():
+    """Homepage accessible without login"""
+    return render_template('homepage.html')
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Login handler"""
     if 'user_id' in session:
-        if session['role'] == 'admin':
+        role = session.get('role')
+        return redirect(url_for('admin_dashboard' if role == 'admin' else 'student_dashboard'))
+    
+    if request.method == 'POST':
+        identifier = request.form.get('identifier')  # Can be username or email
+        password = request.form.get('password')
+        
+        # Admin check
+        if identifier == 'admin@library.com' and password == 'admin123':
+            admin_user = User.query.filter_by(email='admin@library.com', role='admin').first()
+            if not admin_user:
+                admin_user = User(
+                    username='admin',
+                    email='admin@library.com',
+                    password=generate_password_hash('admin123'),
+                    role='admin',
+                    full_name='System Administrator'
+                )
+                db.session.add(admin_user)
+                db.session.commit()
+            
+            session.update({
+                'user_id': admin_user.id,
+                'username': admin_user.username,
+                'role': admin_user.role
+            })
             return redirect(url_for('admin_dashboard'))
-        else:
-            return redirect(url_for('student_dashboard'))
+        
+        # Regular user login
+        user = User.query.filter((User.email == identifier) | (User.username == identifier)).first()
+        
+        if not user or not check_password_hash(user.password, password):
+            flash('Invalid username/email or password', 'danger')
+            return redirect(url_for('login'))
+        
+        session.update({
+            'user_id': user.id,
+            'username': user.username,
+            'role': user.role   
+        })
+        
+        return redirect(url_for('admin_dashboard' if user.role == 'admin' else 'student_dashboard'))
+    
     return render_template('login.html')
 
-@app.route('/login', methods=['POST'])
-def login_post():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    
-    user = User.query.filter_by(username=username).first()
-    
-    if not user or not check_password_hash(user.password, password):
-        flash('Invalid username or password', 'danger')
-        return redirect(url_for('login'))
-    
-    session['user_id'] = user.id
-    session['username'] = user.username
-    session['role'] = user.role
-    
-    if user.role == 'admin':
-        return redirect(url_for('admin_dashboard'))
-    else:
-        return redirect(url_for('student_dashboard'))
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """User registration route"""
+    if 'user_id' in session:
+        return redirect(url_for('student_dashboard' if session['role'] == 'student' else 'admin_dashboard'))
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        role = request.form.get('role', 'student')  # Default role is 'student'
+        student_id = request.form.get('student_id') if role == 'student' else None
+
+        # Validation checks
+        if not username or not email or not password or not confirm_password:
+            flash('All fields are required', 'danger')
+            return redirect(url_for('register'))
+
+        if password != confirm_password:
+            flash('Passwords do not match', 'danger')
+            return redirect(url_for('register'))
+
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists', 'danger')
+            return redirect(url_for('register'))
+
+        if User.query.filter_by(email=email).first():
+            flash('Email is already registered', 'danger')
+            return redirect(url_for('register'))
+
+        if role == 'student' and not student_id:
+            flash('Student ID is required for student registration', 'danger')
+            return redirect(url_for('register'))
+
+        # Create new user
+        try:
+            new_user = User(
+                username=username,
+                email=email,
+                password=generate_password_hash(password, method='sha256'),
+                role=role,
+                student_id=student_id,
+                created_at=datetime.utcnow()
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Registration successful! Please log in.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'An error occurred during registration: {str(e)}', 'danger')
+            return redirect(url_for('register'))
+
+    return render_template('register.html')
 
 @app.route('/logout')
 def logout():
+    """Logout handler"""
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for('home'))  # Redirect to homepage after logout
+
 
 # Admin Routes
 @app.route('/admin/dashboard')
@@ -128,18 +228,22 @@ def admin_dashboard():
     total_books = Book.query.count()
     total_users = User.query.filter_by(role='student').count()
     total_borrowed = Transaction.query.filter_by(status='borrowed').count()
-    overdue_books = Transaction.query.filter(Transaction.due_date < datetime.utcnow(), 
+    overdue_books = Transaction.query.filter(Transaction.due_date < datetime.now(timezone.utc), 
                                            Transaction.status == 'borrowed').count()
     
     # Recent transactions
     recent_transactions = Transaction.query.order_by(Transaction.issue_date.desc()).limit(5).all()
+    
+    
     
     return render_template('admin/dashboard.html', 
                          total_books=total_books,
                          total_users=total_users,
                          total_borrowed=total_borrowed,
                          overdue_books=overdue_books,
-                         recent_transactions=recent_transactions)
+                         recent_transactions=recent_transactions
+    )
+
 
 @app.route('/admin/books')
 def admin_books():
@@ -202,7 +306,21 @@ def add_book():
         return redirect(url_for('admin_books'))
     
     return render_template('admin/add_book.html')
-
+@app.route('/admin/data-viewer')
+def admin_data_viewer():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('login'))
+    
+    # Get all data from each model
+    users = User.query.all()
+    books = Book.query.all()
+    transactions = Transaction.query.all()
+    
+    return render_template('admin/data_viewer.html', 
+                         users=users,
+                         books=books,
+                         transactions=transactions,
+                         datetime=datetime)  # Pass datetime to template
 @app.route('/admin/books/edit/<int:id>', methods=['GET', 'POST'])
 def edit_book(id):
     book = Book.query.get_or_404(id)
@@ -349,13 +467,16 @@ def admin_transactions():
         transactions = Transaction.query.filter_by(status='returned').order_by(Transaction.return_date.desc()).paginate(page=page, per_page=10)
     elif status == 'overdue':
         transactions = Transaction.query.filter(
-            Transaction.due_date < datetime.utcnow(),
+            Transaction.due_date < datetime.now(timezone.utc),
             Transaction.status == 'borrowed'
         ).order_by(Transaction.due_date).paginate(page=page, per_page=10)
     else:
         transactions = Transaction.query.order_by(Transaction.issue_date.desc()).paginate(page=page, per_page=10)
     
-    return render_template('admin/transactions.html', transactions=transactions, status=status)
+    return render_template('admin/transactions.html', 
+                         transactions=transactions, 
+                         status=status,
+                         datetime=datetime)  # Pass datetime to template
 
 @app.route('/admin/transactions/issue', methods=['POST'])
 def issue_book():
@@ -391,17 +512,31 @@ def issue_book():
     new_transaction = Transaction(
         book_id=book.id,
         user_id=user.id,
-        due_date=datetime.utcnow() + timedelta(days=14)
-    )
+        due_date=datetime.now(timezone.utc) + timedelta(days=14))
     
     # Update book availability
     book.available -= 1
     
     db.session.add(new_transaction)
-    db.session.commit()
+    db.session.commit()  # Only one commit needed
     
     flash('Book issued successfully', 'success')
     return redirect(url_for('admin_transactions'))
+
+@app.route('/update_transactions', methods=['POST'])
+def update_transactions():
+    # Example logic to mark overdue transactions
+    overdue_transactions = Transaction.query.filter(
+        Transaction.due_date < datetime.now(timezone.utc),
+        Transaction.status == 'borrowed'
+    ).all()
+    
+    for transaction in overdue_transactions:
+        transaction.status = 'overdue'
+        transaction.fine_amount = calculate_fine(transaction.due_date)
+    
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/transactions/return/<int:id>')
 def return_book(id):
@@ -411,13 +546,12 @@ def return_book(id):
         flash('This book is already returned', 'info')
         return redirect(url_for('admin_transactions'))
     
-    # Update transaction
+    transaction.return_date = datetime.now(timezone.utc)
     transaction.status = 'returned'
-    transaction.return_date = datetime.utcnow()
-    
+    transaction.return_date = datetime.now(timezone.utc)
     # Calculate fine if overdue
-    if datetime.utcnow() > transaction.due_date:
-        transaction.fine_amount = calculate_fine(transaction.due_date)
+    if datetime.now(timezone.utc) > transaction.due_date.replace(tzinfo=timezone.utc):
+        transaction.fine_amount = calculate_fine(transaction.due_date.replace(tzinfo=timezone.utc))
     
     # Update book availability
     book = Book.query.get(transaction.book_id)
@@ -433,68 +567,178 @@ def return_book(id):
 def student_dashboard():
     user = User.query.get(session['user_id'])
     
-    # Get borrowed books
+    # Fetch borrowed and overdue books in a single query
     borrowed_books = Transaction.query.filter_by(
         user_id=user.id,
         status='borrowed'
     ).order_by(Transaction.due_date).all()
     
-    # Calculate overdue books
     overdue_books = [t for t in borrowed_books if t.due_date < datetime.utcnow()]
     
-    # Get recently borrowed books
+    # Fetch recent transactions
     recent_transactions = Transaction.query.filter_by(
         user_id=user.id
     ).order_by(Transaction.issue_date.desc()).limit(5).all()
     
-    return render_template('student/dashboard.html', 
-                         user=user,
-                         borrowed_books=borrowed_books,
-                         overdue_books=overdue_books,
-                         recent_transactions=recent_transactions)
-
+    return render_template(
+        'student/dashboard.html',
+        user=user,
+        datetime=datetime,
+        borrowed_books=borrowed_books,
+        overdue_books=overdue_books,
+        recent_transactions=recent_transactions
+    )
+    
 @app.route('/student/browse')
 def browse_books():
-    search = request.args.get('search', '')
-    category = request.args.get('category', 'all')
-    page = request.args.get('page', 1, type=int)
-    
-    query = Book.query
-    
-    if search:
-        query = query.filter(
-            (Book.title.contains(search)) | 
-            (Book.author.contains(search)) |
-            (Book.isbn.contains(search))
+    try:
+        search = request.args.get('search', '').strip()
+        category = request.args.get('category', 'all')
+        page = request.args.get('page', 1, type=int)
+        
+        # Base query
+        query = Book.query
+        
+        # Apply search filter
+        if search:
+            query = query.filter(
+                or_(
+                    Book.title.ilike(f'%{search}%'),
+                    Book.author.ilike(f'%{search}%'),
+                    Book.isbn.ilike(f'%{search}%')
+                )
+            )
+        
+        # Apply category filter
+        if category != 'all':
+            query = query.filter_by(category=category)
+        
+        # Paginate results
+        books = query.order_by(Book.title).paginate(
+            page=page,
+            per_page=12,
+            error_out=False
+        )
+        
+        # Get distinct categories
+        categories = db.session.query(Book.category.distinct())\
+                              .filter(Book.category.isnot(None))\
+                              .order_by(Book.category)\
+                              .all()
+        categories = [c[0] for c in categories]
+        
+        return render_template(
+            'student/browse.html',
+            books=books,
+            categories=categories,
+            search=search,
+            category=category
         )
     
-    if category != 'all':
-        query = query.filter_by(category=category)
-    
-    books = query.order_by(Book.title).paginate(page=page, per_page=10)
-    
-    # Get all categories for filter dropdown
-    categories = db.session.query(Book.category.distinct()).filter(Book.category.isnot(None)).all()
-    categories = [c[0] for c in categories]
-    
-    return render_template('student/browse.html', books=books, search=search, category=category, categories=categories)
+    except Exception as e:
+        current_app.logger.error(f"Error: {str(e)}")
+        flash('An error occurred. Please try again.', 'danger')
+        return redirect(url_for('student_dashboard'))
 
-@app.route('/student/borrowed')
-def borrowed_books():
-    user = User.query.get(session['user_id'])
+@app.route('/student/borrow/<int:book_id>', methods=['POST'])  # Changed route pattern
+def student_borrow_book(book_id):  # Changed function name
+    if 'user_id' not in session:
+        flash('Please login to borrow books', 'danger')
+        return redirect(url_for('login'))
     
-    # Get all borrowed books
-    transactions = Transaction.query.filter_by(
-        user_id=user.id,
-        status='borrowed'
-    ).order_by(Transaction.due_date).all()
+    try:
+        # Get current datetime with timezone awareness
+        borrow_date = datetime.now(timezone.utc)
+        due_date = borrow_date + timedelta(days=14)
+        
+        # Check if book exists and is available
+        book = Book.query.get_or_404(book_id)
+        if book.available <= 0:
+            flash('This book is currently unavailable', 'danger')
+            return redirect(url_for('browse_books'))
+        
+        # Check if user already has this book borrowed
+        existing_borrow = Transaction.query.filter_by(
+            user_id=session['user_id'],
+            book_id=book_id,
+            status='borrowed'
+        ).first()
+        
+        if existing_borrow:
+            flash('You have already borrowed this book', 'warning')
+            return redirect(url_for('browse_books'))
+        
+        # Create new transaction
+        transaction = Transaction(
+            user_id=session['user_id'],
+            book_id=book.id,
+            issue_date=borrow_date,
+            due_date=due_date,
+            status='borrowed'
+        )
+        
+        # Update book availability
+        book.available -= 1
+        
+        # Commit changes
+        db.session.add(transaction)
+        db.session.commit()
+        
+        flash(f'Successfully borrowed "{book.title}"', 'success')
+        return redirect(url_for('browse_books'))
     
-    # Calculate fines for overdue books
-    for t in transactions:
-        if t.due_date < datetime.utcnow():
-            t.fine_amount = calculate_fine(t.due_date)
+    except Exception as e:
+        db.session.rollback()
+        flash('An error occurred while processing your request', 'danger')
+        return redirect(url_for('browse_books'))
+
+@app.route('/student/borrowed-books')
+def student_borrowed_books():  # Changed function name
+    if 'user_id' not in session:
+        flash('Please login to view your borrowed books', 'danger')
+        return redirect(url_for('login'))
     
-    return render_template('student/borrowed.html', transactions=transactions)
+    # Get current user's borrowed books that haven't been returned
+    borrowed_books = db.session.query(Transaction, Book)\
+        .join(Book)\
+        .filter(
+            Transaction.user_id == session['user_id'],
+            Transaction.status == 'borrowed'
+        )\
+        .order_by(Transaction.due_date.asc())\
+        .all()
+    
+    return render_template(
+    'student/borrowed_books.html',
+    borrowed_books=borrowed_books,
+    datetime=datetime,
+    current_time=datetime.utcnow()  # <-- yeh line add karo
+)
+@app.route('/student/return/<int:transaction_id>', methods=['POST'])  # Changed route pattern
+def student_return_book(transaction_id):  # Changed function name
+    if 'user_id' not in session:
+        flash('Please login to return books', 'danger')
+        return redirect(url_for('login'))
+    
+    transaction = Transaction.query.get_or_404(transaction_id)
+    
+    # Verify the book belongs to the current user
+    if transaction.user_id != session['user_id']:
+        abort(403)
+    
+    book = Book.query.get_or_404(transaction.book_id)
+    
+    # Update records
+    transaction.status = 'returned'
+    transaction.return_date = datetime.now(timezone.utc)
+    book.available += 1
+    
+    db.session.commit()
+    
+    flash(f'Book "{book.title}" returned successfully!', 'success')
+    return redirect(url_for('student_borrowed_books'))  # Updated redirect
+
+
 
 @app.route('/student/profile', methods=['GET', 'POST'])
 def student_profile():

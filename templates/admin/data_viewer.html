@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Data Viewer{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/data_viewer.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+{% endblock %}
+{% block extra_js %}
+{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="mb-4"></i> Data Viewer</h1>
+    
+    <!-- Users Table -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5><i class="bi bi-people-fill"></i> Users ({{ users|length }})</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Student ID</th>
+                            <th>Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td><span class="badge bg-{% if user.role == 'admin' %}danger{% else %}primary{% endif %}">{{ user.role }}</span></td>
+                            <td>{{ user.student_id or '-' }}</td>
+                            <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Books Table -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5><i class="bi bi-book-half"></i> Books ({{ books|length }})</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>ISBN</th>
+                            <th>Available</th>
+                            <th>Added On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for book in books %}
+                        <tr>
+                            <td>{{ book.id }}</td>
+                            <td>{{ book.title }}</td>
+                            <td>{{ book.author }}</td>
+                            <td>{{ book.isbn }}</td>
+                            <td>
+                                <span class="badge bg-{% if book.available > 0 %}success{% else %}danger{% endif %}">
+                                    {{ book.available }}/{{ book.quantity }}
+                                </span>
+                            </td>
+                            <td>{{ book.added_at.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5><i class="bi bi-arrow-left-right"></i> Transactions ({{ transactions|length }})</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Book</th>
+                            <th>User</th>
+                            <th>Issued</th>
+                            <th>Due</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in transactions %}
+                        <tr>
+                            <td>{{ t.id }}</td>
+                            <td>{{ t.book.title }}</td>
+                            <td>{{ t.user.username }}</td>
+                            <td>{{ t.issue_date.strftime('%Y-%m-%d') }}</td>
+                            <td class="{% if t.due_date < datetime.utcnow() and t.status == 'borrowed' %}text-danger{% endif %}">
+                                {{ t.due_date.strftime('%Y-%m-%d') }}
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if t.status == 'borrowed' %}primary{% elif t.status == 'returned' %}success{% else %}danger{% endif %}">
+                                    {{ t.status|capitalize }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

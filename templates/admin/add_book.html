@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 
 {% block title %}Add New Book{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/add_book.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+{% endblock %}
+{% block extra_js %}
 
+{% endblock %}
 {% block content %}
+<style></style>
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">Add New Book</h1>
     <div class="btn-toolbar mb-2 mb-md-0">

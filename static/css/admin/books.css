@@ -1,0 +1,302 @@
+/* ========== Main Color Palette ========== */
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-light: #818cf8;
+  --secondary: #a855f7;
+  --secondary-light: #c084fc;
+  --accent: #3b82f6;
+  --bg-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --card-bg: #ffffff;
+  --body-bg: #f8fafc;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow: 0 4px 6px rgba(99, 102, 241, 0.1);
+  --shadow-lg: 0 10px 15px rgba(99, 102, 241, 0.1);
+}
+
+/* ========== Global Styles ========== */
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--body-bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+  color: var(--primary);
+  border-color: var(--primary);
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-outline-secondary {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-outline-danger {
+  transition: all 0.3s ease;
+}
+
+.btn-outline-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
+}
+
+/* ========== Header & Navigation ========== */
+.border-bottom {
+  border-color: var(--border-color) !important;
+}
+
+.h2 {
+  font-weight: 700;
+  
+  
+  letter-spacing: -0.03em;
+}
+
+/* ========== Search Card ========== */
+.card {
+  background-color: var(--card-bg);
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.form-control {
+  border-color: var(--border-color);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* ========== Table Styles ========== */
+.table {
+  margin-top: 1.5rem;
+  background-color: var(--card-bg);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.table thead th {
+  background-color: rgba(99, 102, 241, 0.05);
+  border-bottom: 2px solid var(--border-color);
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  padding: 1rem;
+}
+
+.table tbody td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(99, 102, 241, 0.02);
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(99, 102, 241, 0.05);
+  transition: background-color 0.3s ease;
+}
+
+/* Book cover styling */
+.table img {
+  border-radius: 0.25rem;
+  object-fit: cover;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s ease;
+}
+
+.table img:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow);
+}
+
+.bi-book {
+  color: var(--primary-light);
+}
+
+/* ========== Badges ========== */
+.badge {
+  padding: 0.5em 0.75em;
+  font-weight: 500;
+  border-radius: 0.375rem;
+}
+
+.bg-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+.bg-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
+/* ========== Pagination ========== */
+.pagination {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.page-link {
+  color: var(--primary);
+  border-color: var(--border-color);
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  margin: 0 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.page-link:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+  color: var(--primary-dark);
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-item.active .page-link {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-item.disabled .page-link {
+  color: var(--text-muted);
+  background-color: transparent;
+}
+
+/* ========== Action Buttons ========== */
+.btn-sm {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.375rem;
+}
+
+.btn-sm .bi {
+  font-size: 1rem;
+  vertical-align: -0.125em;
+}
+
+/* ========== Custom Scrollbar ========== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* ========== Responsive Adjustments ========== */
+@media (max-width: 768px) {
+  .table img {
+    width: 40px;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .table thead th, .table tbody td {
+    padding: 0.75rem;
+  }
+  
+  .h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Add subtle animations for scroll elements */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card, .table-responsive {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.table-responsive {
+  animation-delay: 0.2s;
+}
+
+/* Hero section background pattern */
+.d-flex.justify-content-between {
+  position: relative;
+  overflow: hidden;
+}
+
+.d-flex.justify-content-between::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100%;
+  background-image: radial-gradient(circle at center, rgba(99, 102, 241, 0.1) 0, transparent 70%);
+  opacity: 0.6;
+  z-index: -1;
+}

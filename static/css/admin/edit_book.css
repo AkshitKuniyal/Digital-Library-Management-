@@ -1,0 +1,251 @@
+/* ========== Main Color Palette ========== */
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-light: #818cf8;
+  --secondary: #a855f7;
+  --secondary-light: #c084fc;
+  --accent: #3b82f6;
+  --bg-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --card-bg: #ffffff;
+  --body-bg: #f8fafc;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow: 0 4px 6px rgba(99, 102, 241, 0.1);
+  --shadow-lg: 0 10px 15px rgba(99, 102, 241, 0.1);
+}
+
+/* ========== Global Styles ========== */
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--body-bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+.border-bottom {
+  border-color: var(--border-color) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* ========== Header Styles ========== */
+.h2 {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.btn-outline-secondary {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-sm {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.375rem;
+}
+
+.btn-sm .bi {
+  font-size: 1rem;
+  vertical-align: -0.125em;
+}
+
+/* ========== Card Styles ========== */
+.card {
+  background-color: var(--card-bg);
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.card-body {
+  padding: 2rem;
+}
+
+/* ========== Form Styles ========== */
+.form-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.form-control {
+  border-color: var(--border-color);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+
+.form-control:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.form-control[readonly],
+.form-control:disabled {
+  background-color: rgba(99, 102, 241, 0.05);
+  border-color: var(--border-color);
+  opacity: 0.75;
+}
+
+.form-control::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+textarea.form-control {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* ========== Image Preview ========== */
+.img-thumbnail {
+  padding: 0.25rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.img-thumbnail:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow);
+}
+
+/* ========== Button Styles ========== */
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* File input styling */
+input[type="file"].form-control {
+  padding: 0.6rem;
+}
+
+input[type="file"].form-control::file-selector-button {
+  background-color: var(--primary-light);
+  color: white;
+  border: 0;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  margin-right: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+input[type="file"].form-control::file-selector-button:hover {
+  background-color: var(--primary);
+}
+
+/* ========== Animation ========== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== Custom Scrollbar ========== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* ========== Responsive Adjustments ========== */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1.5rem;
+  }
+  
+  .h2 {
+    font-size: 1.5rem;
+  }
+  
+  .row {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
+  
+  .col-md-6 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+/* Add decorative design element */
+.d-flex.justify-content-between {
+  position: relative;
+  overflow: hidden;
+}
+
+.d-flex.justify-content-between::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100%;
+  background-image: radial-gradient(circle at center, rgba(99, 102, 241, 0.1) 0, transparent 70%);
+  opacity: 0.6;
+  z-index: -1;
+}
+
+/* Form row hover enhancement */
+.row:hover {
+  background-color: rgba(99, 102, 241, 0.02);
+  border-radius: 0.5rem;
+  transition: background-color 0.3s ease;
+}
