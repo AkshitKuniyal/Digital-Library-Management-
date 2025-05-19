@@ -22,7 +22,7 @@
   }
   
   .container {
-    margin-top: 200px;
+  
     animation: fadeIn 0.8s ease-in-out;
   }
   
@@ -45,7 +45,33 @@
     overflow: hidden;
     position: relative;
   }
-  
+  .admin-note {
+  font-size: 0.85rem;
+  color: var(--dark-gray);
+  text-align: center;
+  margin-top: 1.5rem;
+  padding: 0.75rem;
+  background-color: rgba(76, 201, 240, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid var(--light-blue);
+}
+
+.admin-note strong {
+  color: var(--dark-blue);
+}
+
+a {
+  color: var(--primary-blue);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--dark-blue);
+  text-decoration: underline;
+}
+
   .card:before {
     content: "";
     position: absolute;

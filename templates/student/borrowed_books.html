@@ -8,9 +8,22 @@
             <i class="bi bi-book-plus"></i> Borrow More Books
         </a>
     </div>
-
+{% block extra_js %}
+<script>
+    // Auto-dismiss alerts after 5 seconds (5000 milliseconds)
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            // Bootstrap 5 alert fade-out
+            alert.classList.remove('show');
+            alert.classList.add('fade');
+            setTimeout(() => alert.remove(), 150); // Wait for fade animation
+        });
+    }, 1500);
+</script>
+{% endblock %}
     {% if not borrowed_books %}
-        <div class="alert alert-info">
+        <div class=" alert-info" style="height: 80px;display: flex;align-items: center;justify-content: center; font-size: 1.2rem;border-radius: 10px;">
             You haven't borrowed any books yet.
         </div>
     {% else %}

@@ -4,7 +4,7 @@
 
 {% block extra_css %}
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/dashboard.css') }}">
+<link rel="stylesheet" href="/static/css/admin/dashboard.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 {% endblock %}
 
@@ -21,7 +21,7 @@
     <!-- Stats Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
+            <div class="card text-white  mb-3" style="background: linear-gradient(135deg, var(--primary) 0%, #1e32a1 100%) !important;">
                 <div class="card-body">
                     <h5 class="card-title">Total Books</h5>
                     <p class="card-text display-6">{{ total_books }}</p>
@@ -29,7 +29,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-success mb-3">
+            <div class="card text-white bg-success mb-3" style="background: linear-gradient(135deg, var(--success) 0%, #12875c 100%) !important;">
                 <div class="card-body">
                     <h5 class="card-title">Total Students</h5>
                     <p class="card-text display-6">{{ total_users }}</p>
@@ -37,7 +37,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-warning mb-3">
+            <div class="card text-white  mb-3" style="background: linear-gradient(135deg, var(--warning) 0%, #a87e14 100%) !important;">
                 <div class="card-body">
                     <h5 class="card-title">Borrowed Books</h5>
                     <p class="card-text display-6">{{ total_borrowed }}</p>
@@ -45,7 +45,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-danger mb-3">
+            <div class="card text-white  mb-3" style="background: linear-gradient(135deg, var(--danger) 0%, #991313 100%) !important;">
                 <div class="card-body">
                     <h5 class="card-title">Overdue Books</h5>
                     <p class="card-text display-6">{{ overdue_books }}</p>
@@ -114,5 +114,17 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .catch(error => console.error('Error:', error));
 });
+
+    // Auto-dismiss alerts after 5 seconds (5000 milliseconds)
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            // Bootstrap 5 alert fade-out
+            alert.classList.remove('show');
+            alert.classList.add('fade');
+            setTimeout(() => alert.remove(), 150); // Wait for fade animation
+        });
+    }, 1500);
+
 </script>
 {% endblock %}
